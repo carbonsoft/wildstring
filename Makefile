@@ -21,3 +21,5 @@ userspace:
 	rm -f userspace
 clean:
 	rm -f *~ *.ko *.so *.mod.c *.ko.unsigned *.o modules.order Module.symvers
+indent:
+	Lindent *.c include/linux/netfilter/xt_wildstring.h
