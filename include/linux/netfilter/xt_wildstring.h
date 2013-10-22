@@ -7,38 +7,37 @@
 #define XT_WILDSTRING_MAX_ALGO_NAME_SIZE 16
 
 enum {
-	XT_WILDSTRING_FLAG_INVERT		= 0x01,
-	XT_WILDSTRING_FLAG_IGNORECASE	= 0x02
+	XT_WILDSTRING_FLAG_INVERT = 0x01,
+	XT_WILDSTRING_FLAG_IGNORECASE = 0x02
 };
 
-struct xt_wildstring_info
-{
+struct xt_wildstring_info {
 	__u16 from_offset;
 	__u16 to_offset;
-	char	  algo[XT_WILDSTRING_MAX_ALGO_NAME_SIZE];
-	char 	  pattern[XT_WILDSTRING_MAX_PATTERN_SIZE];
-	char 	  *pattern_part1;
-	char 	  *pattern_part2;
-	char 	  *pattern_part3;
-	__u8  patlen;
-	__u8  patlen_part1;
-	__u8  patlen_part2;
-	__u8  patlen_part3;
+	char algo[XT_WILDSTRING_MAX_ALGO_NAME_SIZE];
+	char pattern[XT_WILDSTRING_MAX_PATTERN_SIZE];
+	char *pattern_part1;
+	char *pattern_part2;
+	char *pattern_part3;
+	__u8 patlen;
+	__u8 patlen_part1;
+	__u8 patlen_part2;
+	__u8 patlen_part3;
 	union {
 		struct {
-			__u8  invert;
+			__u8 invert;
 		} v0;
 
 		struct {
-			__u8  flags;
+			__u8 flags;
 		} v1;
 	} u;
 
 	/* Used internally by the kernel */
-	struct ts_config __attribute__((aligned(8))) *config;
-	struct ts_config __attribute__((aligned(8))) *config_part1;
-	struct ts_config __attribute__((aligned(8))) *config_part2;
-	struct ts_config __attribute__((aligned(8))) *config_part3;
+	struct ts_config __attribute__ ((aligned(8))) *config;
+	struct ts_config __attribute__ ((aligned(8))) *config_part1;
+	struct ts_config __attribute__ ((aligned(8))) *config_part2;
+	struct ts_config __attribute__ ((aligned(8))) *config_part3;
 };
 
 #endif

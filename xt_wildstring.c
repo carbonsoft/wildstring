@@ -129,11 +129,11 @@ static void wildstring_mt_destroy(const struct xt_mtdtor_param *par)
 {
 	struct xt_wildstring_info *conf = WILDSTRING_TEXT_PRIV(par->matchinfo);
 
-	if (conf->pattern_part1);
+	if (conf->pattern_part1)
 		textsearch_destroy(conf->config_part1);
-	if (conf->pattern_part2);
+	if (conf->pattern_part2)
 		textsearch_destroy(conf->config_part2);
-	if (conf->pattern_part3);
+	if (conf->pattern_part3)
 		textsearch_destroy(conf->config_part3);
 }
 

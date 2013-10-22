@@ -33,37 +33,35 @@
 
 static void string_help(void)
 {
-	printf(
-"wildstring match options:\n"
-"--from                       Offset to start searching from\n"
-"--to                         Offset to stop searching\n"
-"--algo                       Algorithm\n"
-"--icase                      Ignore case (default: 0)\n"
-"[!] --wildstring wildstring          Match a string in a packet\n"
-"[!] --hex-string string      Match a hex string in a packet\n");
+	printf("wildstring match options:\n"
+	       "--from                       Offset to start searching from\n"
+	       "--to                         Offset to stop searching\n"
+	       "--algo                       Algorithm\n"
+	       "--icase                      Ignore case (default: 0)\n"
+	       "[!] --wildstring wildstring          Match a string in a packet\n"
+	       "[!] --hex-string string      Match a hex string in a packet\n");
 }
 
 static const struct option string_opts[] = {
-	{ "from", 1, NULL, '1' },
-	{ "to", 1, NULL, '2' },
-	{ "algo", 1, NULL, '3' },
-	{ "wildstring", 1, NULL, '4' },
-	{ "hex-string", 1, NULL, '5' },
-	{ "icase", 0, NULL, '6' },
-	{ .name = NULL }
+	{"from", 1, NULL, '1'},
+	{"to", 1, NULL, '2'},
+	{"algo", 1, NULL, '3'},
+	{"wildstring", 1, NULL, '4'},
+	{"hex-string", 1, NULL, '5'},
+	{"icase", 0, NULL, '6'},
+	{.name = NULL}
 };
 
 static void string_init(struct xt_entry_match *m)
 {
-	struct xt_wildstring_info *i = (struct xt_wildstring_info *) m->data;
+	struct xt_wildstring_info *i = (struct xt_wildstring_info *)m->data;
 
 	if (i->to_offset == 0)
 		i->to_offset = UINT16_MAX;
 }
 
-static void
-parse_string(const char *s, struct xt_wildstring_info *info)
-{	
+static void parse_string(const char *s, struct xt_wildstring_info *info)
+{
 	/* xt_wildstring does not need \0 at the end of the pattern */
 	if (strlen(s) <= XT_WILDSTRING_MAX_PATTERN_SIZE) {
 		strncpy(info->pattern, s, XT_WILDSTRING_MAX_PATTERN_SIZE);
@@ -73,8 +71,7 @@ parse_string(const char *s, struct xt_wildstring_info *info)
 	xtables_error(PARAMETER_PROBLEM, "WILDSTRING too long \"%s\"", s);
 }
 
-static void
-parse_algo(const char *s, struct xt_wildstring_info *info)
+static void parse_algo(const char *s, struct xt_wildstring_info *info)
 {
 	/* xt_wildstring needs \0 for algo name */
 	if (strlen(s) < XT_WILDSTRING_MAX_ALGO_NAME_SIZE) {
@@ -84,10 +81,9 @@ parse_algo(const char *s, struct xt_wildstring_info *info)
 	xtables_error(PARAMETER_PROBLEM, "ALGO too long \"%s\"", s);
 }
 
-static void
-parse_hex_string(const char *s, struct xt_wildstring_info *info)
+static void parse_hex_string(const char *s, struct xt_wildstring_info *info)
 {
-	int i=0, slen, sindex=0, schar;
+	int i = 0, slen, sindex = 0, schar;
 	short hex_f = 0, literal_f = 0;
 	char hextmp[3];
 
@@ -95,7 +91,7 @@ parse_hex_string(const char *s, struct xt_wildstring_info *info)
 
 	if (slen == 0) {
 		xtables_error(PARAMETER_PROBLEM,
-			"WILDSTRING must contain at least one char");
+			      "WILDSTRING must contain at least one char");
 	}
 
 	while (i < slen) {
@@ -103,60 +99,65 @@ parse_hex_string(const char *s, struct xt_wildstring_info *info)
 			literal_f = 1;
 		} else if (s[i] == '\\') {
 			xtables_error(PARAMETER_PROBLEM,
-				"Cannot include literals in hex data");
+				      "Cannot include literals in hex data");
 		} else if (s[i] == '|') {
 			if (hex_f)
 				hex_f = 0;
 			else {
 				hex_f = 1;
 				/* get past any initial whitespace just after the '|' */
-				while (s[i+1] == ' ')
+				while (s[i + 1] == ' ')
 					i++;
 			}
-			if (i+1 >= slen)
+			if (i + 1 >= slen)
 				break;
 			else
-				i++;  /* advance to the next character */
+				i++;	/* advance to the next character */
 		}
 
 		if (literal_f) {
-			if (i+1 >= slen) {
+			if (i + 1 >= slen) {
 				xtables_error(PARAMETER_PROBLEM,
-					"Bad literal placement at end of string");
+					      "Bad literal placement at end of string");
 			}
-			info->pattern[sindex] = s[i+1];
-			i += 2;  /* skip over literal char */
+			info->pattern[sindex] = s[i + 1];
+			i += 2;	/* skip over literal char */
 			literal_f = 0;
 		} else if (hex_f) {
-			if (i+1 >= slen) {
+			if (i + 1 >= slen) {
 				xtables_error(PARAMETER_PROBLEM,
-					"Odd number of hex digits");
+					      "Odd number of hex digits");
 			}
-			if (i+2 >= slen) {
+			if (i + 2 >= slen) {
 				/* must end with a "|" */
-				xtables_error(PARAMETER_PROBLEM, "Invalid hex block");
-			}
-			if (! isxdigit(s[i])) /* check for valid hex char */
-				xtables_error(PARAMETER_PROBLEM, "Invalid hex char '%c'", s[i]);
-			if (! isxdigit(s[i+1])) /* check for valid hex char */
-				xtables_error(PARAMETER_PROBLEM, "Invalid hex char '%c'", s[i+1]);
-			hextmp[0] = s[i];
-			hextmp[1] = s[i+1];
-			hextmp[2] = '\0';
-			if (! sscanf(hextmp, "%x", &schar))
 				xtables_error(PARAMETER_PROBLEM,
-					"Invalid hex char `%c'", s[i]);
-			info->pattern[sindex] = (char) schar;
-			if (s[i+2] == ' ')
-				i += 3;  /* spaces included in the hex block */
+					      "Invalid hex block");
+			}
+			if (!isxdigit(s[i]))	/* check for valid hex char */
+				xtables_error(PARAMETER_PROBLEM,
+					      "Invalid hex char '%c'", s[i]);
+			if (!isxdigit(s[i + 1]))	/* check for valid hex char */
+				xtables_error(PARAMETER_PROBLEM,
+					      "Invalid hex char '%c'",
+					      s[i + 1]);
+			hextmp[0] = s[i];
+			hextmp[1] = s[i + 1];
+			hextmp[2] = '\0';
+			if (!sscanf(hextmp, "%x", &schar))
+				xtables_error(PARAMETER_PROBLEM,
+					      "Invalid hex char `%c'", s[i]);
+			info->pattern[sindex] = (char)schar;
+			if (s[i + 2] == ' ')
+				i += 3;	/* spaces included in the hex block */
 			else
 				i += 2;
-		} else {  /* the char is not part of hex data, so just copy */
+		} else {	/* the char is not part of hex data, so just copy */
 			info->pattern[sindex] = s[i];
 			i++;
 		}
 		if (sindex > XT_WILDSTRING_MAX_PATTERN_SIZE)
-			xtables_error(PARAMETER_PROBLEM, "WILDSTRING too long \"%s\"", s);
+			xtables_error(PARAMETER_PROBLEM,
+				      "WILDSTRING too long \"%s\"", s);
 		sindex++;
 	}
 	info->patlen = sindex;
@@ -170,7 +171,7 @@ parse_hex_string(const char *s, struct xt_wildstring_info *info)
 
 static int
 string_parse(int c, char **argv, int invert, unsigned int *flags,
-             const void *entry, struct xt_entry_match **match)
+	     const void *entry, struct xt_entry_match **match)
 {
 	struct xt_wildstring_info *stringinfo =
 	    (struct xt_wildstring_info *)(*match)->data;
@@ -180,35 +181,36 @@ string_parse(int c, char **argv, int invert, unsigned int *flags,
 	case '1':
 		if (*flags & FROM)
 			xtables_error(PARAMETER_PROBLEM,
-				   "Can't specify multiple --from");
+				      "Can't specify multiple --from");
 		stringinfo->from_offset = atoi(optarg);
 		*flags |= FROM;
 		break;
 	case '2':
 		if (*flags & TO)
 			xtables_error(PARAMETER_PROBLEM,
-				   "Can't specify multiple --to");
+				      "Can't specify multiple --to");
 		stringinfo->to_offset = atoi(optarg);
 		*flags |= TO;
 		break;
 	case '3':
 		if (*flags & ALGO)
 			xtables_error(PARAMETER_PROBLEM,
-				   "Can't specify multiple --algo");
+				      "Can't specify multiple --algo");
 		parse_algo(optarg, stringinfo);
 		*flags |= ALGO;
 		break;
 	case '4':
 		if (*flags & STRING)
 			xtables_error(PARAMETER_PROBLEM,
-				   "Can't specify multiple --string");
+				      "Can't specify multiple --string");
 		xtables_check_inverse(optarg, &invert, &optind, 0, argv);
 		parse_string(optarg, stringinfo);
 		if (invert) {
 			if (revision == 0)
 				stringinfo->u.v0.invert = 1;
 			else
-				stringinfo->u.v1.flags |= XT_WILDSTRING_FLAG_INVERT;
+				stringinfo->u.v1.flags |=
+				    XT_WILDSTRING_FLAG_INVERT;
 		}
 		*flags |= STRING;
 		break;
@@ -216,15 +218,16 @@ string_parse(int c, char **argv, int invert, unsigned int *flags,
 	case '5':
 		if (*flags & STRING)
 			xtables_error(PARAMETER_PROBLEM,
-				   "Can't specify multiple --hex-string");
+				      "Can't specify multiple --hex-string");
 
 		xtables_check_inverse(optarg, &invert, &optind, 0, argv);
-		parse_hex_string(optarg, stringinfo);  /* sets length */
+		parse_hex_string(optarg, stringinfo);	/* sets length */
 		if (invert) {
 			if (revision == 0)
 				stringinfo->u.v0.invert = 1;
 			else
-				stringinfo->u.v1.flags |= XT_WILDSTRING_FLAG_INVERT;
+				stringinfo->u.v1.flags |=
+				    XT_WILDSTRING_FLAG_INVERT;
 		}
 		*flags |= STRING;
 		break;
@@ -232,7 +235,7 @@ string_parse(int c, char **argv, int invert, unsigned int *flags,
 	case '6':
 		if (revision == 0)
 			xtables_error(VERSION_PROBLEM,
-				   "Kernel doesn't support --icase");
+				      "Kernel doesn't support --icase");
 
 		stringinfo->u.v1.flags |= XT_WILDSTRING_FLAG_IGNORECASE;
 		*flags |= ICASE;
@@ -248,11 +251,11 @@ static void string_check(unsigned int flags)
 {
 	if (!(flags & STRING))
 		xtables_error(PARAMETER_PROBLEM,
-			   "WILDSTRING match: You must specify `--string' or "
-			   "`--hex-string'");
+			      "WILDSTRING match: You must specify `--string' or "
+			      "`--hex-string'");
 	if (!(flags & ALGO))
 		xtables_error(PARAMETER_PROBLEM,
-			   "WILDSTRING match: You must specify `--algo'");
+			      "WILDSTRING match: You must specify `--algo'");
 }
 
 /* Test to see if the string contains non-printable chars or quotes */
@@ -260,54 +263,52 @@ static unsigned short int
 is_hex_string(const char *str, const unsigned short int len)
 {
 	unsigned int i;
-	for (i=0; i < len; i++)
-		if (! isprint(str[i]))
-			return 1;  /* string contains at least one non-printable char */
+	for (i = 0; i < len; i++)
+		if (!isprint(str[i]))
+			return 1;	/* string contains at least one non-printable char */
 	/* use hex output if the last char is a "\" */
-	if ((unsigned char) str[len-1] == 0x5c)
+	if ((unsigned char)str[len - 1] == 0x5c)
 		return 1;
 	return 0;
 }
 
 /* Print string with "|" chars included as one would pass to --hex-string */
-static void
-print_hex_string(const char *str, const unsigned short int len)
+static void print_hex_string(const char *str, const unsigned short int len)
 {
 	unsigned int i;
 	/* start hex block */
 	printf("\"|");
-	for (i=0; i < len; i++) {
+	for (i = 0; i < len; i++) {
 		/* see if we need to prepend a zero */
-		if ((unsigned char) str[i] <= 0x0F)
-			printf("0%x", (unsigned char) str[i]);
+		if ((unsigned char)str[i] <= 0x0F)
+			printf("0%x", (unsigned char)str[i]);
 		else
-			printf("%x", (unsigned char) str[i]);
+			printf("%x", (unsigned char)str[i]);
 	}
 	/* close hex block */
 	printf("|\" ");
 }
 
-static void
-print_string(const char *str, const unsigned short int len)
+static void print_string(const char *str, const unsigned short int len)
 {
 	unsigned int i;
 	printf("\"");
-	for (i=0; i < len; i++) {
-		if ((unsigned char) str[i] == 0x22)  /* escape any embedded quotes */
+	for (i = 0; i < len; i++) {
+		if ((unsigned char)str[i] == 0x22)	/* escape any embedded quotes */
 			printf("%c", 0x5c);
-		printf("%c", (unsigned char) str[i]);
+		printf("%c", (unsigned char)str[i]);
 	}
-	printf("\" ");  /* closing space and quote */
+	printf("\" ");		/* closing space and quote */
 }
 
 static void
 string_print(const void *ip, const struct xt_entry_match *match, int numeric)
 {
 	const struct xt_wildstring_info *info =
-	    (const struct xt_wildstring_info*) match->data;
+	    (const struct xt_wildstring_info *)match->data;
 	const int revision = match->u.user.revision;
 	int invert = (revision == 0 ? info->u.v0.invert :
-				    info->u.v1.flags & XT_WILDSTRING_FLAG_INVERT);
+		      info->u.v1.flags & XT_WILDSTRING_FLAG_INVERT);
 
 	if (is_hex_string(info->pattern, info->patlen)) {
 		printf("WILDSTRING match %s", invert ? "!" : "");
@@ -328,16 +329,16 @@ string_print(const void *ip, const struct xt_entry_match *match, int numeric)
 static void string_save(const void *ip, const struct xt_entry_match *match)
 {
 	const struct xt_wildstring_info *info =
-	    (const struct xt_wildstring_info*) match->data;
+	    (const struct xt_wildstring_info *)match->data;
 	const int revision = match->u.user.revision;
 	int invert = (revision == 0 ? info->u.v0.invert :
-				    info->u.v1.flags & XT_WILDSTRING_FLAG_INVERT);
+		      info->u.v1.flags & XT_WILDSTRING_FLAG_INVERT);
 
 	if (is_hex_string(info->pattern, info->patlen)) {
-		printf("%s--hex-string ", (invert) ? "! ": "");
+		printf("%s--hex-string ", (invert) ? "! " : "");
 		print_hex_string(info->pattern, info->patlen);
 	} else {
-		printf("%s--string ", (invert) ? "! ": "");
+		printf("%s--string ", (invert) ? "! " : "");
 		print_string(info->pattern, info->patlen);
 	}
 	printf("--algo %s ", info->algo);
@@ -349,38 +350,37 @@ static void string_save(const void *ip, const struct xt_entry_match *match)
 		printf("--icase ");
 }
 
-
 static struct xtables_match string_mt_reg[] = {
 	{
-		.name          = "wildstring",
-		.revision      = 0,
-		.family        = NFPROTO_UNSPEC,
-		.version       = XTABLES_VERSION,
-		.size          = XT_ALIGN(sizeof(struct xt_wildstring_info)),
-		.userspacesize = offsetof(struct xt_wildstring_info, config),
-		.help          = string_help,
-		.init          = string_init,
-		.parse         = string_parse,
-		.final_check   = string_check,
-		.print         = string_print,
-		.save          = string_save,
-		.extra_opts    = string_opts,
-	},
+	 .name = "wildstring",
+	 .revision = 0,
+	 .family = NFPROTO_UNSPEC,
+	 .version = XTABLES_VERSION,
+	 .size = XT_ALIGN(sizeof(struct xt_wildstring_info)),
+	 .userspacesize = offsetof(struct xt_wildstring_info, config),
+	 .help = string_help,
+	 .init = string_init,
+	 .parse = string_parse,
+	 .final_check = string_check,
+	 .print = string_print,
+	 .save = string_save,
+	 .extra_opts = string_opts,
+	 },
 	{
-		.name          = "wildstring",
-		.revision      = 1,
-		.family        = NFPROTO_UNSPEC,
-		.version       = XTABLES_VERSION,
-		.size          = XT_ALIGN(sizeof(struct xt_wildstring_info)),
-		.userspacesize = offsetof(struct xt_wildstring_info, config),
-		.help          = string_help,
-		.init          = string_init,
-		.parse         = string_parse,
-		.final_check   = string_check,
-		.print         = string_print,
-		.save          = string_save,
-		.extra_opts    = string_opts,
-	},
+	 .name = "wildstring",
+	 .revision = 1,
+	 .family = NFPROTO_UNSPEC,
+	 .version = XTABLES_VERSION,
+	 .size = XT_ALIGN(sizeof(struct xt_wildstring_info)),
+	 .userspacesize = offsetof(struct xt_wildstring_info, config),
+	 .help = string_help,
+	 .init = string_init,
+	 .parse = string_parse,
+	 .final_check = string_check,
+	 .print = string_print,
+	 .save = string_save,
+	 .extra_opts = string_opts,
+	 },
 };
 
 void _init(void)
