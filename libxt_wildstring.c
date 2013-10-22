@@ -18,7 +18,7 @@
  *     27.01.2001: Gianni Tedesco <gianni@ecsc.co.uk>
  *             Changed --tos to --string in save(). Also
  *             updated to work with slightly modified
- *             ipt_string_info.
+ *             ipt_wildstring_info.
  */
 #define _GNU_SOURCE 1
 #include <stdio.h>
@@ -29,7 +29,7 @@
 #include <ctype.h>
 #include <xtables.h>
 #include <stddef.h>
-#include <linux/netfilter/xt_string.h>
+#include <linux/netfilter/xt_wildstring.h>
 
 static void string_help(void)
 {
@@ -39,7 +39,7 @@ static void string_help(void)
 "--to                         Offset to stop searching\n"
 "--algo                       Algorithm\n"
 "--icase                      Ignore case (default: 0)\n"
-"[!] --string string          Match a string in a packet\n"
+"[!] --wildstring wildstring          Match a string in a packet\n"
 "[!] --hex-string string      Match a hex string in a packet\n");
 }
 
@@ -47,7 +47,7 @@ static const struct option string_opts[] = {
 	{ "from", 1, NULL, '1' },
 	{ "to", 1, NULL, '2' },
 	{ "algo", 1, NULL, '3' },
-	{ "string", 1, NULL, '4' },
+	{ "wildstring", 1, NULL, '4' },
 	{ "hex-string", 1, NULL, '5' },
 	{ "icase", 0, NULL, '6' },
 	{ .name = NULL }
@@ -55,37 +55,37 @@ static const struct option string_opts[] = {
 
 static void string_init(struct xt_entry_match *m)
 {
-	struct xt_string_info *i = (struct xt_string_info *) m->data;
+	struct xt_wildstring_info *i = (struct xt_wildstring_info *) m->data;
 
 	if (i->to_offset == 0)
 		i->to_offset = UINT16_MAX;
 }
 
 static void
-parse_string(const char *s, struct xt_string_info *info)
+parse_string(const char *s, struct xt_wildstring_info *info)
 {	
-	/* xt_string does not need \0 at the end of the pattern */
-	if (strlen(s) <= XT_STRING_MAX_PATTERN_SIZE) {
-		strncpy(info->pattern, s, XT_STRING_MAX_PATTERN_SIZE);
-		info->patlen = strnlen(s, XT_STRING_MAX_PATTERN_SIZE);
+	/* xt_wildstring does not need \0 at the end of the pattern */
+	if (strlen(s) <= XT_WILDSTRING_MAX_PATTERN_SIZE) {
+		strncpy(info->pattern, s, XT_WILDSTRING_MAX_PATTERN_SIZE);
+		info->patlen = strnlen(s, XT_WILDSTRING_MAX_PATTERN_SIZE);
 		return;
 	}
 	xtables_error(PARAMETER_PROBLEM, "STRING too long \"%s\"", s);
 }
 
 static void
-parse_algo(const char *s, struct xt_string_info *info)
+parse_algo(const char *s, struct xt_wildstring_info *info)
 {
-	/* xt_string needs \0 for algo name */
-	if (strlen(s) < XT_STRING_MAX_ALGO_NAME_SIZE) {
-		strncpy(info->algo, s, XT_STRING_MAX_ALGO_NAME_SIZE);
+	/* xt_wildstring needs \0 for algo name */
+	if (strlen(s) < XT_WILDSTRING_MAX_ALGO_NAME_SIZE) {
+		strncpy(info->algo, s, XT_WILDSTRING_MAX_ALGO_NAME_SIZE);
 		return;
 	}
 	xtables_error(PARAMETER_PROBLEM, "ALGO too long \"%s\"", s);
 }
 
 static void
-parse_hex_string(const char *s, struct xt_string_info *info)
+parse_hex_string(const char *s, struct xt_wildstring_info *info)
 {
 	int i=0, slen, sindex=0, schar;
 	short hex_f = 0, literal_f = 0;
@@ -155,7 +155,7 @@ parse_hex_string(const char *s, struct xt_string_info *info)
 			info->pattern[sindex] = s[i];
 			i++;
 		}
-		if (sindex > XT_STRING_MAX_PATTERN_SIZE)
+		if (sindex > XT_WILDSTRING_MAX_PATTERN_SIZE)
 			xtables_error(PARAMETER_PROBLEM, "STRING too long \"%s\"", s);
 		sindex++;
 	}
@@ -172,8 +172,8 @@ static int
 string_parse(int c, char **argv, int invert, unsigned int *flags,
              const void *entry, struct xt_entry_match **match)
 {
-	struct xt_string_info *stringinfo =
-	    (struct xt_string_info *)(*match)->data;
+	struct xt_wildstring_info *stringinfo =
+	    (struct xt_wildstring_info *)(*match)->data;
 	const int revision = (*match)->u.user.revision;
 
 	switch (c) {
@@ -208,7 +208,7 @@ string_parse(int c, char **argv, int invert, unsigned int *flags,
 			if (revision == 0)
 				stringinfo->u.v0.invert = 1;
 			else
-				stringinfo->u.v1.flags |= XT_STRING_FLAG_INVERT;
+				stringinfo->u.v1.flags |= XT_WILDSTRING_FLAG_INVERT;
 		}
 		*flags |= STRING;
 		break;
@@ -224,7 +224,7 @@ string_parse(int c, char **argv, int invert, unsigned int *flags,
 			if (revision == 0)
 				stringinfo->u.v0.invert = 1;
 			else
-				stringinfo->u.v1.flags |= XT_STRING_FLAG_INVERT;
+				stringinfo->u.v1.flags |= XT_WILDSTRING_FLAG_INVERT;
 		}
 		*flags |= STRING;
 		break;
@@ -234,7 +234,7 @@ string_parse(int c, char **argv, int invert, unsigned int *flags,
 			xtables_error(VERSION_PROBLEM,
 				   "Kernel doesn't support --icase");
 
-		stringinfo->u.v1.flags |= XT_STRING_FLAG_IGNORECASE;
+		stringinfo->u.v1.flags |= XT_WILDSTRING_FLAG_IGNORECASE;
 		*flags |= ICASE;
 		break;
 
@@ -303,11 +303,11 @@ print_string(const char *str, const unsigned short int len)
 static void
 string_print(const void *ip, const struct xt_entry_match *match, int numeric)
 {
-	const struct xt_string_info *info =
-	    (const struct xt_string_info*) match->data;
+	const struct xt_wildstring_info *info =
+	    (const struct xt_wildstring_info*) match->data;
 	const int revision = match->u.user.revision;
 	int invert = (revision == 0 ? info->u.v0.invert :
-				    info->u.v1.flags & XT_STRING_FLAG_INVERT);
+				    info->u.v1.flags & XT_WILDSTRING_FLAG_INVERT);
 
 	if (is_hex_string(info->pattern, info->patlen)) {
 		printf("STRING match %s", invert ? "!" : "");
@@ -321,17 +321,17 @@ string_print(const void *ip, const struct xt_entry_match *match, int numeric)
 		printf("FROM %u ", info->from_offset);
 	if (info->to_offset != 0)
 		printf("TO %u ", info->to_offset);
-	if (revision > 0 && info->u.v1.flags & XT_STRING_FLAG_IGNORECASE)
+	if (revision > 0 && info->u.v1.flags & XT_WILDSTRING_FLAG_IGNORECASE)
 		printf("ICASE ");
 }
 
 static void string_save(const void *ip, const struct xt_entry_match *match)
 {
-	const struct xt_string_info *info =
-	    (const struct xt_string_info*) match->data;
+	const struct xt_wildstring_info *info =
+	    (const struct xt_wildstring_info*) match->data;
 	const int revision = match->u.user.revision;
 	int invert = (revision == 0 ? info->u.v0.invert :
-				    info->u.v1.flags & XT_STRING_FLAG_INVERT);
+				    info->u.v1.flags & XT_WILDSTRING_FLAG_INVERT);
 
 	if (is_hex_string(info->pattern, info->patlen)) {
 		printf("%s--hex-string ", (invert) ? "! ": "");
@@ -345,19 +345,19 @@ static void string_save(const void *ip, const struct xt_entry_match *match)
 		printf("--from %u ", info->from_offset);
 	if (info->to_offset != 0)
 		printf("--to %u ", info->to_offset);
-	if (revision > 0 && info->u.v1.flags & XT_STRING_FLAG_IGNORECASE)
+	if (revision > 0 && info->u.v1.flags & XT_WILDSTRING_FLAG_IGNORECASE)
 		printf("--icase ");
 }
 
 
 static struct xtables_match string_mt_reg[] = {
 	{
-		.name          = "string",
+		.name          = "wildstring",
 		.revision      = 0,
 		.family        = NFPROTO_UNSPEC,
 		.version       = XTABLES_VERSION,
-		.size          = XT_ALIGN(sizeof(struct xt_string_info)),
-		.userspacesize = offsetof(struct xt_string_info, config),
+		.size          = XT_ALIGN(sizeof(struct xt_wildstring_info)),
+		.userspacesize = offsetof(struct xt_wildstring_info, config),
 		.help          = string_help,
 		.init          = string_init,
 		.parse         = string_parse,
@@ -367,12 +367,12 @@ static struct xtables_match string_mt_reg[] = {
 		.extra_opts    = string_opts,
 	},
 	{
-		.name          = "string",
+		.name          = "wildstring",
 		.revision      = 1,
 		.family        = NFPROTO_UNSPEC,
 		.version       = XTABLES_VERSION,
-		.size          = XT_ALIGN(sizeof(struct xt_string_info)),
-		.userspacesize = offsetof(struct xt_string_info, config),
+		.size          = XT_ALIGN(sizeof(struct xt_wildstring_info)),
+		.userspacesize = offsetof(struct xt_wildstring_info, config),
 		.help          = string_help,
 		.init          = string_init,
 		.parse         = string_parse,
