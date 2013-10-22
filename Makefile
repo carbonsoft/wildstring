@@ -19,3 +19,5 @@ userspace:
 	gcc userspace_wildstring.c -o userspace
 	./userspace
 	rm -f userspace
+clean:
+	rm -f *~ *.ko *.so *.mod.c *.ko.unsigned *.o modules.order Module.symvers
