@@ -1,0 +1,9 @@
+*.o
+.*
+*.ko
+*.ko.unsigned
+modules.order
+Module.symvers
+*.mod.c
+!.gitignore
+*.so
