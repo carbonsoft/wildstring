@@ -34,7 +34,7 @@
 static void string_help(void)
 {
 	printf(
-"string match options:\n"
+"wildstring match options:\n"
 "--from                       Offset to start searching from\n"
 "--to                         Offset to stop searching\n"
 "--algo                       Algorithm\n"
@@ -70,7 +70,7 @@ parse_string(const char *s, struct xt_wildstring_info *info)
 		info->patlen = strnlen(s, XT_WILDSTRING_MAX_PATTERN_SIZE);
 		return;
 	}
-	xtables_error(PARAMETER_PROBLEM, "STRING too long \"%s\"", s);
+	xtables_error(PARAMETER_PROBLEM, "WILDSTRING too long \"%s\"", s);
 }
 
 static void
@@ -95,7 +95,7 @@ parse_hex_string(const char *s, struct xt_wildstring_info *info)
 
 	if (slen == 0) {
 		xtables_error(PARAMETER_PROBLEM,
-			"STRING must contain at least one char");
+			"WILDSTRING must contain at least one char");
 	}
 
 	while (i < slen) {
@@ -156,7 +156,7 @@ parse_hex_string(const char *s, struct xt_wildstring_info *info)
 			i++;
 		}
 		if (sindex > XT_WILDSTRING_MAX_PATTERN_SIZE)
-			xtables_error(PARAMETER_PROBLEM, "STRING too long \"%s\"", s);
+			xtables_error(PARAMETER_PROBLEM, "WILDSTRING too long \"%s\"", s);
 		sindex++;
 	}
 	info->patlen = sindex;
@@ -248,11 +248,11 @@ static void string_check(unsigned int flags)
 {
 	if (!(flags & STRING))
 		xtables_error(PARAMETER_PROBLEM,
-			   "STRING match: You must specify `--string' or "
+			   "WILDSTRING match: You must specify `--string' or "
 			   "`--hex-string'");
 	if (!(flags & ALGO))
 		xtables_error(PARAMETER_PROBLEM,
-			   "STRING match: You must specify `--algo'");
+			   "WILDSTRING match: You must specify `--algo'");
 }
 
 /* Test to see if the string contains non-printable chars or quotes */
@@ -310,10 +310,10 @@ string_print(const void *ip, const struct xt_entry_match *match, int numeric)
 				    info->u.v1.flags & XT_WILDSTRING_FLAG_INVERT);
 
 	if (is_hex_string(info->pattern, info->patlen)) {
-		printf("STRING match %s", invert ? "!" : "");
+		printf("WILDSTRING match %s", invert ? "!" : "");
 		print_hex_string(info->pattern, info->patlen);
 	} else {
-		printf("STRING match %s", invert ? "!" : "");
+		printf("WILDSTRING match %s", invert ? "!" : "");
 		print_string(info->pattern, info->patlen);
 	}
 	printf("ALGO name %s ", info->algo);

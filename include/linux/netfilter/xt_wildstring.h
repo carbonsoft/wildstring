@@ -17,9 +17,9 @@ struct xt_wildstring_info
 	__u16 to_offset;
 	char	  algo[XT_WILDSTRING_MAX_ALGO_NAME_SIZE];
 	char 	  pattern[XT_WILDSTRING_MAX_PATTERN_SIZE];
-	char 	  pattern_part1[XT_WILDSTRING_MAX_PATTERN_SIZE];
-	char 	  pattern_part2[XT_WILDSTRING_MAX_PATTERN_SIZE];
-	char 	  pattern_part3[XT_WILDSTRING_MAX_PATTERN_SIZE];
+	char 	  *pattern_part1;
+	char 	  *pattern_part2;
+	char 	  *pattern_part3;
 	__u8  patlen;
 	__u8  patlen_part1;
 	__u8  patlen_part2;
